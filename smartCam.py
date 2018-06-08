@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import time
+import os
 
 # Install Instructions for OpenCV
 # conda install -c conda-forge ffmpeg
@@ -12,9 +13,23 @@ class Camera():
         self.vid_len  = video_length
         self.t = time.time()
         self.cam = cv2.VideoCapture(1)
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.show_img = show_img
-        threshold = 1000000
+        threshold = 1e6
         self.thresh = threshold
+        made_dir = False
+        counter = 0
+        while not made_dir:
+            self.vid_dir = 'bin/videos' + str(counter)
+            if os.path.exists(self.vid_dir):
+                counter += 1
+            else:
+                os.makedirs(self.vid_dir)
+                made_dir = True
+                print('Directory created: ' + self.vid_dir)
+        # test_img = self.captureImage()
+        # height, width = test_img.shape[:2]
+        # print('Image Size: ' + str(height) + 'x' + str(width))
 
     def captureImage(self):
         ret, frame = self.cam.read()
@@ -36,6 +51,14 @@ class Camera():
 
     def recordVideo(self, counter):
         print('Recording Video')
+        vid_writer = cv2.VideoWriter(self.vid_dir+'/recording'+str(counter)+'.avi', self.fourcc, 20.0, (640,480))
+        start_time = time.time()
+        while(time.time()-start_time >= self.vid_len):
+            ret, frame = self.cam.read()
+            if not ret:
+                raise ValueError('Unable to Capture Video')
+            vid_writer.write(frame)
+        vid_writer.release()
         return 0
 
 class Runner():
@@ -45,6 +68,7 @@ class Runner():
         self.run_ = True
 
     def run(self):
+        counter = 0
         while self.run_:
             frame = cam.captureImage()
             if self.init == True:
@@ -54,7 +78,8 @@ class Runner():
                 is_similar = cam.compImages(frame, self.old_frame)
             self.old_frame = frame
             if not is_similar:
-                cam.recordVideo(0)
+                cam.recordVideo(counter)
+                counter += 1
             time.sleep(float(self.cam.cap_del))
         cam.release()
         cv2.destroyAllWindows()
@@ -64,9 +89,9 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.1')
-    parser.add_argument('--video_length', help='Length of Each Video (s)', default='10')
+    parser.add_argument('--video_length', help='Length of Each Video (s)', default='5')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
     args = parser.parse_args()
-    cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length, show_img=True)
+    cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length, show_img=False)
     runner = Runner(cam)
     runner.run()
