@@ -56,7 +56,8 @@ class Camera():
                 raise ValueError('Unable to Capture Video')
             vid_writer.write(frame)
         vid_writer.release()
-        return 0
+        frame = self.captureImage()
+        return frame
 
 class Runner():
     def __init__(self, camera):
@@ -74,10 +75,10 @@ class Runner():
                 is_similar = True
             else:
                 is_similar = cam.compImages(frame, self.old_frame)
-            self.old_frame = frame
             if not is_similar:
-                cam.recordVideo(counter)
+                frame = cam.recordVideo(counter)
                 counter += 1
+            self.old_frame = frame
             time.sleep(float(self.cam.cap_del))
         cam.release()
         cv2.destroyAllWindows()
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('--show_img', help='Show the captured images', default='False')
     parser.add_argument('--camera_port', help='USB port for webcam', default='1')
     args = parser.parse_args()
-    if args.show_img == 'False':
+    if args.show_img != 'True':
         args.show_img = False
     cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length,
         show_img=args.show_img, camera_port=args.camera_port)
