@@ -5,11 +5,11 @@ import os
 
 
 class Camera():
-    def __init__(self, capture_delay=1, video_length=10, show_img=False, vid_name='capture', vid_type='.avi'):
-        self.cap_del = capture_delay
+    def __init__(self, capture_delay=1.0, video_length=10.0, show_img=False, camera_port=1, vid_name='capture', vid_type='.avi'):
+        self.cap_del = float(capture_delay)
         self.vid_len  = float(video_length)
         self.t = time.time()
-        self.cam = cv2.VideoCapture(1) # Machine dependent
+        self.cam = cv2.VideoCapture(int(camera_port)) # Machine dependent
         self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
         self.show_img = show_img
         threshold = 2e6
@@ -89,7 +89,11 @@ if __name__ == '__main__':
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.1')
     parser.add_argument('--video_length', help='Length of Each Video (s)', default='5.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
+    parser.add_argument('--camera_port', help='USB port for webcam', default='1')
     args = parser.parse_args()
-    cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length, show_img=False)
+    if args.show_img == 'False':
+        args.show_img = False
+    cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length,
+        show_img=args.show_img, camera_port=args.camera_port)
     runner = Runner(cam)
     runner.run()
