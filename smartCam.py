@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import time
 import os
+# import skvideo.io
 
 # Install Instructions for OpenCV
 # conda install -c conda-forge ffmpeg
@@ -10,10 +11,12 @@ import os
 class Camera():
     def __init__(self, capture_delay=1, video_length=10, show_img=False, vid_name='capture', vid_type='.avi'):
         self.cap_del = capture_delay
-        self.vid_len  = video_length
+        self.vid_len  = float(video_length)
         self.t = time.time()
-        self.cam = cv2.VideoCapture(1)
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.cam = cv2.VideoCapture(1) # Machine dependent
+        # self.cam = skvideo.io.VideoCapture(1)
+        # self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
+        self.fourcc = cv2.VideoWriter_fourcc('M','P','E','G')
         self.show_img = show_img
         threshold = 1e6
         self.thresh = threshold
@@ -50,10 +53,10 @@ class Camera():
         return is_similar
 
     def recordVideo(self, counter):
-        print('Recording Video')
-        vid_writer = cv2.VideoWriter(self.vid_dir+'/recording'+str(counter)+'.avi', self.fourcc, 20.0, (640,480))
+        print('Motion Detected: Recording Video')
+        vid_writer = cv2.VideoWriter(self.vid_dir+'/recording'+str(counter)+'.avi', self.fourcc, 25.0, (640,480))
         start_time = time.time()
-        while(time.time()-start_time >= self.vid_len):
+        while(time.time()-start_time < self.vid_len):
             ret, frame = self.cam.read()
             if not ret:
                 raise ValueError('Unable to Capture Video')
@@ -89,7 +92,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.1')
-    parser.add_argument('--video_length', help='Length of Each Video (s)', default='5')
+    parser.add_argument('--video_length', help='Length of Each Video (s)', default='5.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
     args = parser.parse_args()
     cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length, show_img=False)
