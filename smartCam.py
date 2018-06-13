@@ -2,11 +2,7 @@ import numpy as np
 import cv2
 import time
 import os
-# import skvideo.io
 
-# Install Instructions for OpenCV
-# conda install -c conda-forge ffmpeg
-# conda install -c conda-forge opencv
 
 class Camera():
     def __init__(self, capture_delay=1, video_length=10, show_img=False, vid_name='capture', vid_type='.avi'):
@@ -14,11 +10,9 @@ class Camera():
         self.vid_len  = float(video_length)
         self.t = time.time()
         self.cam = cv2.VideoCapture(1) # Machine dependent
-        # self.cam = skvideo.io.VideoCapture(1)
-        # self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
-        self.fourcc = cv2.VideoWriter_fourcc('M','P','E','G')
+        self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
         self.show_img = show_img
-        threshold = 1e6
+        threshold = 2e6
         self.thresh = threshold
         made_dir = False
         counter = 0
@@ -30,9 +24,9 @@ class Camera():
                 os.makedirs(self.vid_dir)
                 made_dir = True
                 print('Directory created: ' + self.vid_dir)
-        # test_img = self.captureImage()
-        # height, width = test_img.shape[:2]
-        # print('Image Size: ' + str(height) + 'x' + str(width))
+        test_img = self.captureImage()
+        self.height, self.width = test_img.shape[:2]
+        print('Image Size: ' + str(self.width) + 'x' + str(self.height))
 
     def captureImage(self):
         ret, frame = self.cam.read()
@@ -54,7 +48,7 @@ class Camera():
 
     def recordVideo(self, counter):
         print('Motion Detected: Recording Video')
-        vid_writer = cv2.VideoWriter(self.vid_dir+'/recording'+str(counter)+'.avi', self.fourcc, 25.0, (640,480))
+        vid_writer = cv2.VideoWriter(self.vid_dir+'/recording'+str(counter)+'.avi', self.fourcc, 25.0, (self.width,self.height))
         start_time = time.time()
         while(time.time()-start_time < self.vid_len):
             ret, frame = self.cam.read()
@@ -71,6 +65,7 @@ class Runner():
         self.run_ = True
 
     def run(self):
+        print('Starting Motion Detection')
         counter = 0
         while self.run_:
             frame = cam.captureImage()
