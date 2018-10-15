@@ -4,7 +4,7 @@ import scp
 from auth.auth import Auth
 
 class Client():
-    def __init__(self, host="192.168.1.173", port=22):
+    def __init__(self, host="media-server", port=22):
         self.host = host
         self.port = port
         self.auth = Auth()
