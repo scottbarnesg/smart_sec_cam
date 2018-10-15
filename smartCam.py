@@ -65,7 +65,7 @@ class Runner():
         self.init = True
         self.run_ = True
 
-    def run(self):
+    def run(self, sftpClient):
         print('Starting Motion Detection')
         counter = 0
         while self.run_:
@@ -77,6 +77,10 @@ class Runner():
                 is_similar = cam.compImages(frame, self.old_frame)
             if not is_similar:
                 frame = cam.recordVideo(counter)
+                # client.send("bin/videos7/recording0.avi", "videos/recording0.avi")
+                localpath = self.cam.vid_dir + '/recording'+str(counter)+'.avi'
+                remotepath = 'videos' + '/recording'+str(counter)+'.avi'
+                sftpClient.send(localpath, remotepath)
                 counter += 1
             self.old_frame = frame
             time.sleep(float(self.cam.cap_del))
@@ -86,6 +90,8 @@ class Runner():
 
 if __name__ == '__main__':
     import argparse
+    from SFTPClient import Client
+    sftpClient = Client()
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.1')
     parser.add_argument('--video_length', help='Length of Each Video (s)', default='5.0')
@@ -97,4 +103,4 @@ if __name__ == '__main__':
     cam = Camera(capture_delay=args.capture_delay, video_length=args.video_length,
         show_img=args.show_img, camera_port=args.camera_port)
     runner = Runner(cam)
-    runner.run()
+    runner.run(sftpClient)

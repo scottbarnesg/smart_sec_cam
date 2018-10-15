@@ -26,4 +26,4 @@ class Client():
 
 if __name__ == '__main__':
     client = Client()
-    client.send("bin/videos7/recording0.avi", "recording0.avi")
+    client.send("bin/videos7/recording0.avi", "videos/recording0.avi")
