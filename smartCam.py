@@ -93,8 +93,8 @@ if __name__ == '__main__':
     from SFTPClient import Client
     sftpClient = Client()
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.1')
-    parser.add_argument('--video_length', help='Length of Each Video (s)', default='5.0')
+    parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.05')
+    parser.add_argument('--video_length', help='Length of Each Video (s)', default='10.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
     parser.add_argument('--camera_port', help='USB port for webcam', default='1')
     args = parser.parse_args()
