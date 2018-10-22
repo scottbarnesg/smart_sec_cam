@@ -13,6 +13,7 @@ class Camera():
         self.cam = cv2.VideoCapture(int(camera_port)) # Machine dependent
         self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
         self.show_img = show_img
+        self.date = datetime.datetime.now()
         threshold = 2e6
         self.thresh = threshold
         made_dir = False
@@ -79,9 +80,10 @@ class Runner():
             if not is_similar:
                 frame = cam.recordVideo(counter)
                 localpath = self.cam.vid_dir + '/recording'+str(counter)+'.avi'
-                date = datetime.datetime.month + '-' + datetime.datetime.day
-                remotepath = 'videos' + date + '/recording'+str(counter)+'.avi'
-                sftpClient.send(localpath, remotepath)
+                date = str(self.cam.date.month) + '-' + str(self.cam.date.day)
+                remotepath = 'videos/' + date + '/recording'+str(counter)+'.avi'
+                remotedir = 'videos/' + date
+                sftpClient.send(localpath, remotepath, remotedir)
                 counter += 1
             self.old_frame = frame
             time.sleep(float(self.cam.cap_del))
@@ -97,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.03')
     parser.add_argument('--video_length', help='Length of Each Video (s)', default='10.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
-    parser.add_argument('--camera_port', help='USB port for webcam', default='1')
+    parser.add_argument('--camera_port', help='USB port for webcam', default='0')
     args = parser.parse_args()
     if args.show_img != 'True':
         args.show_img = False
