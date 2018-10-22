@@ -1,5 +1,6 @@
 *.png
 *.avi
+*.pyc
 
 auth
 bin
