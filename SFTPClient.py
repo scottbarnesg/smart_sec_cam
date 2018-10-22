@@ -20,6 +20,10 @@ class Client():
         # ssl_sock.connect((self.host, self.port))
         self.ssh.connect(self.host, self.port, self.auth.username, self.auth.password)
         sftp = self.ssh.open_sftp()
+        try:
+            sftp.chdir(remotepath)
+        except IOError:
+            sftp.mkdir(remotepath)
         sftp.put(localpath, remotepath)
         sftp.close()
         self.ssh.close()

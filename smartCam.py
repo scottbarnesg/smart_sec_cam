@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import time
 import os
+import datetime
 
 
 class Camera():
@@ -77,9 +78,9 @@ class Runner():
                 is_similar = cam.compImages(frame, self.old_frame)
             if not is_similar:
                 frame = cam.recordVideo(counter)
-                # client.send("bin/videos7/recording0.avi", "videos/recording0.avi")
                 localpath = self.cam.vid_dir + '/recording'+str(counter)+'.avi'
-                remotepath = 'videos' + '/recording'+str(counter)+'.avi'
+                date = datetime.datetime.month + '-' + datetime.datetime.day
+                remotepath = 'videos' + date + '/recording'+str(counter)+'.avi'
                 sftpClient.send(localpath, remotepath)
                 counter += 1
             self.old_frame = frame
@@ -93,7 +94,7 @@ if __name__ == '__main__':
     from SFTPClient import Client
     sftpClient = Client()
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.05')
+    parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.03')
     parser.add_argument('--video_length', help='Length of Each Video (s)', default='10.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
     parser.add_argument('--camera_port', help='USB port for webcam', default='1')
