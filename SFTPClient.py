@@ -9,15 +9,10 @@ class Client():
         self.port = port
         self.auth = Auth()
         self.ssh = paramiko.SSHClient()
-        # self.ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
         self.ssh.load_system_host_keys()
         self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
 
     def send(self, localpath, remotepath):
-        # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # TCP, IPv4
-        # ssl_sock = ssl.wrap_socket(sock, cert_reqs=ssl.CERT_REQUIRED, ca_certs='sslCert.crt')
-        # sock.send(file)
-        # ssl_sock.connect((self.host, self.port))
         self.ssh.connect(self.host, self.port, self.auth.username, self.auth.password)
         sftp = self.ssh.open_sftp()
         try:
