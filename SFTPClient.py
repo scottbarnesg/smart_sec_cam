@@ -1,4 +1,4 @@
-import os
+import os, sys
 import paramiko
 import scp
 from auth.auth import Auth
@@ -13,13 +13,16 @@ class Client():
         self.ssh.load_system_host_keys()
         self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
 
-    def send(self, localpath, remotepath):
+    def send(self, localpath, remotepath, remotedir):
         self.ssh.connect(self.host, self.port, self.auth.username, self.auth.password)
         sftp = self.ssh.open_sftp()
         try:
-            sftp.chdir(remotepath)
+            sftp.chdir(remotedir)
+            print('Folder exists')
         except IOError:
-            sftp.mkdir(remotepath)
+            sftp.mkdir(remotedir)
+            sftp.chdir(remotedir)
+            print('Creating folder')
         sftp.put(localpath, remotepath)
         sftp.close()
         self.ssh.close()
