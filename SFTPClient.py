@@ -9,7 +9,6 @@ class Client():
         self.port = port
         self.auth = Auth()
         self.ssh = paramiko.SSHClient()
-        # self.ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
         self.ssh.load_system_host_keys()
         self.ssh.set_missing_host_key_policy(paramiko.WarningPolicy())
 

@@ -6,7 +6,7 @@ import datetime
 
 
 class Camera():
-    def __init__(self, capture_delay=2.0, video_length=10.0, show_img=False, camera_port=1, vid_name='capture', vid_type='.avi'):
+    def __init__(self, capture_delay=1.0, video_length=10.0, show_img=False, camera_port=1, vid_name='capture', vid_type='.avi'):
         self.cap_del = float(capture_delay)
         self.vid_len  = float(video_length)
         self.t = time.time()
@@ -82,7 +82,6 @@ class Runner():
                 localpath = self.cam.vid_dir + '/recording'+str(counter)+'.avi'
                 date = str(self.cam.date.month) + '-' + str(self.cam.date.day)
                 remotedir = 'videos/' + date
-                # remotepath = 'videos/' + date + '/recording'+str(counter)+'.avi'
                 remotepath = 'recording'+str(counter)+'.avi'
                 print(localpath)
                 print(remotedir)
@@ -103,7 +102,7 @@ if __name__ == '__main__':
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.05')
     parser.add_argument('--video_length', help='Length of Each Video (s)', default='10.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
-    parser.add_argument('--camera_port', help='USB port for webcam', default='0')
+    parser.add_argument('--camera_port', help='USB port for webcam', default='1')
     args = parser.parse_args()
     if args.show_img != 'True':
         args.show_img = False
