@@ -17,11 +17,9 @@ class Client():
         sftp = self.ssh.open_sftp()
         try:
             sftp.chdir(remotedir)
-            print('Folder exists')
         except IOError:
             sftp.mkdir(remotedir)
             sftp.chdir(remotedir)
-            print('Creating folder')
         sftp.put(localpath, remotepath)
         sftp.close()
         self.ssh.close()
