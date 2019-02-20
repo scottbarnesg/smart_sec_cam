@@ -1,12 +1,14 @@
 import cv2
 import time
 from queue import Queue
+from threading import Thread
 
 class Streamer():
 	def __init__(self, path, queueSize=256):
 		self.stream = cv2.VideoCapture(path)
 		self.Q = Queue(maxsize=queueSize)
 		self.delay = 100
+		self.sleepTime = 0.01
 
 	def read(self):
 		return self.Q.get()
@@ -15,39 +17,47 @@ class Streamer():
 		return self.Q.qsize() > 0
 
 	def update(self):
-		if not self.Q.full():
-			(grabbed, frame) = self.stream.read()
-			if grabbed:
-				self.Q.put(frame)
-			else:
-				print('Failed to get frame')
+			print self.Q.qsize()
+			if not self.Q.full():
+				(grabbed, frame) = self.stream.read()
+				if grabbed:
+					self.Q.put(frame)
+
+	def dynamicUpdate(self):
+		if self.Q.qsize() < 50:
+			self.sleepTime += 1e-3
+		elif self.Q.qsize() > 50 and self.sleepTime > 0.01:
+			self.sleepTime -= 1e-3
+		print(self.sleepTime)
 
 	def dynamicFPS(self):
-		if self.Q.qsize() > 100:
-			self.delay -= 5
+		if self.Q.qsize() > 100 and self.delay > 90:
+			self.delay -= 1
 		elif self.Q.qsize() < 100:
-			self.delay += 10
+			self.delay += 5
 			self.update()
 
-	def run(self):
-		for i in range(100):
-			self.update()
+	def render(self):
 		while True:
-			self.update()
-			# self.dynamicFPS()
-			# print('Q Size' + str(self.Q.qsize()))
-			# print('Delay' + str(self.delay))
+			self.dynamicFPS()
 			if self.QNotEmpty():
 				frame = self.read()
 				cv2.imshow("image", frame)
 				cv2.waitKey(self.delay)
-				# cv2.destroyAllWindows()
 			else:
 				print ('Queue Empty')
 				time.sleep(0.1)
 
+	def run(self):
+		updaterThread = Thread(target = self.update)
+		renderThread = Thread(target = self.render)
+
+		updaterThread.start()
+		time.sleep(1)
+		renderThread.start()
+
 
 if __name__ == '__main__':
-	path = '/home/scott/smart_sec_cam/bin/videos5/recording0.avi'
+	path = '/home/scott/smart_sec_cam/bin/videos12/recording0.avi'
 	streamer = Streamer(path)
 	streamer.run()
