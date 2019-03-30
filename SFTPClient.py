@@ -3,7 +3,7 @@ import paramiko
 import scp
 from auth.auth import Auth
 
-class Client():
+class Client:
     def __init__(self, host="media-server", port=22):
         self.host = host
         self.port = port

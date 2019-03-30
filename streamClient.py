@@ -2,12 +2,31 @@ import cv2
 import time
 from queue import Queue
 from threading import Thread
+import requests
+import json
+import io
+from PIL import Image
+import numpy as np
+
+class Client:
+	def __init__(self, addr='http://localhost:50000', api_path='/api/test'):
+		self.addr = addr+api_path
+		content_type = 'image/jpg'
+		self.header = {'content-type', content_type}
+
+	def run(self):
+		while True:
+			response = requests.get(self.addr)
+			self.img = np.array(json.loads(response.content), dtype=np.uint8)
+			cv2.imshow("image", client.img)
+			cv2.waitKey(1)
 
 class Streamer():
 	def __init__(self, path, queueSize=256):
-		self.stream = cv2.VideoCapture(path)
+		# self.stream = cv2.VideoCapture(path)
+		self.client = Client()
 		self.Q = Queue(maxsize=queueSize)
-		self.delay = 50
+		self.delay = 90
 		self.sleepTime = 0.01
 
 	def read(self):
@@ -20,7 +39,8 @@ class Streamer():
 		while True:
 			# print self.Q.qsize()
 			if not self.Q.full():
-				ret, frame = self.stream.read()
+				# resp =
+				# ret, frame = self.stream.read()
 				if ret:
 					self.Q.put(frame)
 			else:
@@ -61,6 +81,11 @@ class Streamer():
 
 
 if __name__ == '__main__':
-	path = '/home/scott/smart_sec_cam/bin/videos17/recording0.avi'
-	streamer = Streamer(path)
-	streamer.run()
+	client = Client()
+	client.run()
+	# print(np.shape(response))
+	cv2.imshow("image", client.img)
+	cv2.waitKey(1000)
+	# path = '/home/scott/smart_sec_cam/bin/videos17/recording0.avi'
+	# streamer = Streamer(path)
+	# streamer.run()

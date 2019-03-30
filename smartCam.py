@@ -5,7 +5,7 @@ import os
 import datetime
 
 
-class Camera():
+class Camera:
     def __init__(self, capture_delay=0.5, video_length=10.0, show_img=False, camera_port=1, vid_name='capture', vid_type='.avi'):
         self.cap_del = float(capture_delay)
         self.vid_len  = float(video_length)
@@ -14,6 +14,7 @@ class Camera():
         self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
         self.show_img = show_img
         self.date = datetime.datetime.now()
+        self.frame_counter = 0
         made_dir = False
         counter = 0
         while not made_dir:
@@ -65,6 +66,7 @@ class MotionDetector():
                 if not ret:
                     raise ValueError('Unable to Capture Video')
                 vid_writer.write(frame)
+                self.frame_counter += 1
         else:
             print('Motion Detected: Recording Video')
             while(time.time()-start_time < self.camera.vid_len):
@@ -76,7 +78,7 @@ class MotionDetector():
         frame = self.camera.captureImage()
         return frame
 
-class Runner():
+class Runner:
     def __init__(self, camera, stream):
         self.cam = camera
         self.motionDetector = MotionDetector(camera)
@@ -85,7 +87,7 @@ class Runner():
         self.stream = stream
 
     def run(self, sftpClient):
-        print('Starting System')
+        print('Starting Server')
         counter = 0
         while self.run_:
             frame = self.cam.captureImage()
@@ -99,7 +101,7 @@ class Runner():
                 else:
                     is_similar = self.motionDetector.compImages(frame, self.old_frame)
                 if not is_similar:
-                    frame = self.motionDetector.recordVideo(counter)
+                    frame = self.motionDetector.recordVideo(counter, self.stream)
                     localpath = self.cam.vid_dir + '/recording'+str(counter)+'.avi'
                     date = str(self.cam.date.month) + '-' + str(self.cam.date.day)
                     remotedir = 'videos/' + date
@@ -121,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.10')
     parser.add_argument('--video_length', help='Length of Each Video (s)', default='10.0')
     parser.add_argument('--show_img', help='Show the captured images', default='False')
-    parser.add_argument('--camera_port', help='USB port for webcam', default='1')
+    parser.add_argument('--camera_port', help='USB port for webcam', default='0')
     parser.add_argument('--stream', help='Streaming mode?', default='False')
     args = parser.parse_args()
     if args.show_img != 'True':
