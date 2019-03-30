@@ -8,16 +8,19 @@ import numpy as np
 import io
 
 class Streamer:
-	def __init__(self, capture_delay=0.05, camera_port=0):
+	def __init__(self, capture_delay=0.05, camera_port=1, img_dims=[480,360]):
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(camera_port)) # Machine dependent
+		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, img_dims[0])
+		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, img_dims[1])
 		self.image = self.captureImage()
+		print(self.image.shape)
 
 	def captureImage(self):
 		ret, frame = self.cam.read()
 		if not ret:
-			raise ValueError('Failed to capture image')
+			raise ValueError('Failed to capture image - check port value')
 		return frame
 
 	def run(self):
