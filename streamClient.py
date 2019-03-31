@@ -9,16 +9,19 @@ from PIL import Image
 import numpy as np
 
 class Client:
-	def __init__(self, addr='http://localhost:50000', api_path='/api/test'):
+	def __init__(self, addr='http://192.168.1.176:50000', api_path='/api/test'):
 		self.addr = addr+api_path
 		content_type = 'image/jpg'
 		self.header = {'content-type', content_type}
 
 	def run(self):
 		while True:
+			print('Sending request')
+			t = time.time()
 			response = requests.get(self.addr)
+			print('Got response in ' + str(time.time()-t))
 			self.img = np.array(json.loads(response.content), dtype=np.uint8)
-			cv2.imshow("image", client.img)
+			cv2.imshow("image", cv2.resize(client.img, (640,480)))
 			cv2.waitKey(1)
 
 class Streamer():
