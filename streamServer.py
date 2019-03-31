@@ -8,7 +8,7 @@ import numpy as np
 import io
 
 class Streamer:
-	def __init__(self, capture_delay=0.05, camera_port=1, img_dims=[480,360]):
+	def __init__(self, capture_delay=0.05, camera_port=0, img_dims=[240,180]):
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(camera_port)) # Machine dependent
@@ -27,13 +27,13 @@ class Streamer:
 		print('Starting image capture')
 		while True:
 			self.image = self.captureImage()
-			time.sleep(self.cap_delay) # Artificial delay added for testing - will remove
+			time.sleep(self.cap_delay) # Prevents capture from eating cpu time
 
 	def encode(self):
 		print('Starting encoding')
-	 	while True:
-	 		self.data = json.dumps(streamer.image.tolist())
-			time.sleep(self.cap_delay) # Artificial delay added for testing - will remove
+		while True:
+			self.data = json.dumps(streamer.image.tolist())
+			time.sleep(self.cap_delay) # Prevents encoding from eating cpu time
 
 
 class Server:
@@ -47,18 +47,7 @@ app = Flask(__name__)
 @app.route(server.api_path, methods=['GET'])
 def serve_image():
 	print('Request recieved')
-	# print(streamer.image)
-	# _, enc_image = cv2.imencode('.jpg', streamer.image)
-	# start = time.time()
-	# list = streamer.image.tolist()
-	# print('List time ' + str(time.time()-start))
-	# ret = jsonify(list)# , mimetype='application.json') #, mimetype='image/jpg') #, as_attachment=True, attachment_filename='img.jpg')
-	# data = json.dumps(list)
-	# print('Total time ' + str(time.time()-start))
-	# data = json.dumps(streamer.image.tolist())
 	return Response(response=streamer.data, status=200, mimetype="application/json")
-	# response = make_response(enc_image.tobyes())
-	# return response
 
 def run_flask():
 	addr = '0.0.0.0'
@@ -67,12 +56,10 @@ def run_flask():
 
 
 if __name__ == "__main__":
-	# app.run(host=addr, port=port, threaded=True)
 	streamThread = Thread(target = streamer.run)
 	serverThread = Thread(target = run_flask)
 	encoderThread = Thread(target = streamer.encode)
-	# time.sleep(2)
-	# serverThread = Thread(target = app.run(host=addr, port=port))
+
 	streamThread.start()
 	serverThread.start()
 	encoderThread.start()
