@@ -9,7 +9,7 @@ from PIL import Image
 import numpy as np
 
 class Client:
-	def __init__(self, addr='http://192.168.1.176:50000', api_path='/api/test'):
+	def __init__(self, addr='http://security-server:50000', api_path='/api/test'):
 		self.addr = addr+api_path
 		content_type = 'image/jpg'
 		self.header = {'content-type', content_type}
