@@ -8,7 +8,7 @@ import numpy as np
 import io
 
 class Streamer:
-	def __init__(self, capture_delay=0.05, camera_port=0, img_dims=[240,180]):
+	def __init__(self, capture_delay=0.1, camera_port=0, img_dims=[240,180]):
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(camera_port)) # Machine dependent
