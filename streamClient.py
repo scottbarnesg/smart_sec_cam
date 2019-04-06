@@ -9,7 +9,7 @@ from PIL import Image
 import numpy as np
 
 class Client:
-	def __init__(self, addr='http://security-server:50000', api_path='/api/test'):
+	def __init__(self, addr='http://192.168.1.218:50000', api_path='/api/test'):
 		self.addr = addr+api_path
 		content_type = 'image/jpg'
 		self.header = {'content-type', content_type}
@@ -20,7 +20,7 @@ class Client:
 			t = time.time()
 			response = requests.get(self.addr)
 			print('Got response in ' + str(time.time()-t))
-			self.img = np.array(json.loads(response.content), dtype=np.uint8)
+			self.img = cv2.imdecode(np.fromstring(response.content, np.uint8), cv2.IMREAD_COLOR)
 			cv2.imshow("image", cv2.resize(client.img, (640,480)))
 			cv2.waitKey(1)
 
@@ -43,7 +43,7 @@ class Streamer():
 			# print self.Q.qsize()
 			if not self.Q.full():
 				# resp =
-				# ret, frame = self.stream.read()
+				ret, frame = self.stream.read()
 				if ret:
 					self.Q.put(frame)
 			else:
@@ -87,8 +87,6 @@ if __name__ == '__main__':
 	client = Client()
 	client.run()
 	# print(np.shape(response))
-	cv2.imshow("image", client.img)
-	cv2.waitKey(1000)
 	# path = '/home/scott/smart_sec_cam/bin/videos17/recording0.avi'
 	# streamer = Streamer(path)
 	# streamer.run()

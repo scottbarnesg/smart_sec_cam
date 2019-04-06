@@ -8,7 +8,7 @@ import numpy as np
 import io
 
 class Streamer:
-	def __init__(self, capture_delay=0.1, camera_port=0, img_dims=[210,160]):
+	def __init__(self, capture_delay=0.05, camera_port=0, img_dims=[640,480]):
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(camera_port)) # Machine dependent
@@ -26,13 +26,13 @@ class Streamer:
 	def run(self):
 		print('Starting image capture')
 		while True:
-			self.image = self.captureImage()
+ 			self.image = self.captureImage()
 			time.sleep(self.cap_delay) # Prevents capture from eating cpu time
 
 	def encode(self):
 		print('Starting encoding')
 		while True:
-			self.data = json.dumps(streamer.image.tolist())
+			self.data = (cv2.imencode('.jpeg', streamer.image)[1]).tostring()
 			time.sleep(self.cap_delay) # Prevents encoding from eating cpu time
 
 
@@ -50,7 +50,7 @@ def serve_image():
 	return Response(response=streamer.data, status=200, mimetype="application/json")
 
 def run_flask():
-	addr = '0.0.0.0'
+	addr = '192.168.1.218'
 	port = 50000
 	app.run(host=addr, port=port, debug=False)
 
