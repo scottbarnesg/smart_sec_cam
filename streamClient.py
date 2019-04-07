@@ -5,7 +5,6 @@ from threading import Thread
 import requests
 import json
 import io
-from PIL import Image
 import numpy as np
 
 class Client:
