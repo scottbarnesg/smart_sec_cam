@@ -1,11 +1,16 @@
 import cv2
 import time
-from queue import Queue
 from threading import Thread
 import requests
 import json
 import io
 import numpy as np
+
+# Make this compatible across versions
+try:
+	from queue import Queue
+except:
+	from Queue import Queue
 
 class Client:
 	def __init__(self, addr='http://security-server:50000', api_path='/api/test', queueSize=256):
@@ -16,14 +21,15 @@ class Client:
 		# Queue info
 		self.responseQ = Queue(maxsize=queueSize)
 		self.decodeQ = Queue(maxsize=queueSize)
-		#Other
+		# Timing
 		self.delay = 0.1
+		self.timeout = 5
 
 	def requestor(self):
 		while True:
 			print('Sending request')
 			t = time.time()
-			response = requests.get(self.addr)
+			response = requests.get(self.addr, timeout=self.timeout)
 			print('Got response in ' + str(time.time()-t))
 			if not self.responseQ.full():
 				self.responseQ.put(response.content)
@@ -55,6 +61,6 @@ if __name__ == '__main__':
 	renderThread = Thread(target = client.render)
 
 	requestThread.start()
-	time.sleep(1)
+	time.sleep(0.3)
 	decodeThread.start()
 	renderThread.start()
