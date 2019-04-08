@@ -15,7 +15,7 @@ except:
 	from Queue import Queue
 
 class Client:
-	def __init__(self, addr='http://security-server:50000', api_path='/api/test', queueSize=256):
+	def __init__(self, addr='http://security-server:50000', api_path='/api/test', queueSize=256, delay=0.05, timeout=5, fps=10, vid_len=3600):
 		# Request info
 		self.addr = addr+api_path
 		content_type = 'image/jpg'
@@ -24,8 +24,11 @@ class Client:
 		self.responseQ = Queue(maxsize=queueSize)
 		self.decodeQ = Queue(maxsize=queueSize)
 		# Timing
-		self.delay = 0.05
-		self.timeout = 5
+		self.delay = delay
+		self.timeout = timeout
+		# Video
+		self.fps = fps
+		self.vid_len = vid_len
 
 	def requestor(self):
 		while True:
@@ -56,39 +59,43 @@ class Client:
 				print('Displayed new frame in ' + str(time.time()-t))
 
 	def write(self):
-		self.fourcc = cv2.VideoWriter_fourcc(*'MPEG')
-		date = datetime.datetime.now()
-		path = "bin/videos/" + str(date.month) + '-' + str(date.day) + '-' + str(date.year)
-		if not os.path.exists(path):
-			os.makedirs(path)
-		print('Videos will be saved to: ' + path)
-		vid_writer = cv2.VideoWriter(path+'/'+str(date.hour)+'-'+str(date.minute)+'.avi', self.fourcc, 10, (640,480))
+		self.fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 		while True:
-			if self.decodeQ.qsize() > 0:
-				t = time.time()
-				print('Queue size: ' + str(self.decodeQ.qsize()))
-				frame = cv2.resize(self.decodeQ.get(), (640,480))
-				vid_writer.write(frame)
-				print('Wrote new frame in: ' + str(time.time()-t))
-			time.sleep(0.05)
-		vid_writer.release()
+			date = datetime.datetime.now()
+			path = "bin/videos/" + str(date.month) + '-' + str(date.day) + '-' + str(date.year)
+			if not os.path.exists(path):
+				os.makedirs(path)
+			print('Videos will be saved to: ' + path)
+			vid_writer = cv2.VideoWriter(path+'/'+str(date.hour)+'-'+str(date.minute)+'.avi', self.fourcc, self.fps, (640,480))
+			t = time.time()
+			while (time.time()-t < self.vid_len):
+				print(self.vid_len-(time.time()-t))
+				if self.decodeQ.qsize() > 0:
+					print('Queue size: ' + str(self.decodeQ.qsize()))
+					frame = cv2.resize(self.decodeQ.get(), (640,480))
+					vid_writer.write(frame)
+				time.sleep(self.delay/2.0)
+			print('Exited inner loop')
+			vid_writer.release()
 
 
 if __name__ == '__main__':
 	import argparse
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('--capture_delay', help='Delay between images (s)', default='0.05')
-	parser.add_argument('--video_length', help='Length of Each Video (s)', default='3600')
-	parser.add_argument('--camera_port', help='USB port for webcam', default='0')
+	parser.add_argument('--video_length', help='Length of Each Video (s)', default='3600') # Not yet implemented
 	parser.add_argument('--render', help='Render the video stream', default='True')
 	parser.add_argument('--write', help='Save video locally', default='False')
 	parser.add_argument('--addr', help='Server address', default='security-server')
+	parser.add_argument('--fps', help='Frame rate', default=10)
+	parser.add_argument('--qSize', help='Queue size', default=256)
+	parser.add_argument('--server', help='Server IP Address/Hostname and Port', default='http://security-server:50000')
 	args = parser.parse_args()
 
 	if args.write == 'True' and args.render == 'True':
 		raise ValueError('You cannot write and render in a single client. Please use two client instances')
 
-	client = Client()
+	client = Client(addr=args.server, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
 
 	requestThread = Thread(target = client.requestor)
 	decodeThread = Thread(target = client.decode)

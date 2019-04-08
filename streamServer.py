@@ -14,8 +14,6 @@ class Streamer:
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(self.cam_port)) # Machine dependent
-		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, img_dims[0])
-		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, img_dims[1])
 		self.image = self.captureImage()
 		print('Image dimentions: ' + str(self.image.shape))
 
