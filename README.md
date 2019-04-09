@@ -22,7 +22,8 @@ The following limitations are known:
     * Workaround: None
 3. No API authentication:
     * Workaround: None
-
+ 
+NOTE: This application has only been tested on Ubuntu 16.04 and 18.04. Other OS's may not be compatible 
 
 ## Contributing
 Feel free to contact me if you are interested in contributing. A list of known issues is available to be worked.
