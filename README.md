@@ -1,26 +1,24 @@
-# Converts USB Webcam into Smart Security Camera
+# Multi-Threaded, Distributed Security Camera Application with Motion Detection
 
 ## Overview
-Turns a USB Webcam into a smart security camera. Frames are captured at fixed
-intervals and compared to detect motion. When motion is detected, video is
-captured and stored as:  
-```
-bin/videos0/video_name.avi
-```
-A new folder is created each time the program is run so as not to override old
-files.  
+This is a distributed OpenCV-based security camera appliation in which each endpoint captures video and sends it to connecting clients via an API. The current release has the following capabilities:
 
-Parameters can be modified in the command line. The image capture delay, video
-length, USB port, and mode can be set. See the main function for guidance.
+Stream Server (streamServer.py): 
+* Stream Thread: Captures frames from camera at port camera_port
+* Encoder Thread: Encodes captures image as a jpeg
+* Server Thread: Serves images to connected clients via API.
 
-## Dependencies:
-Python 2.7.x
-OpenCV 3.4.x
+Stream Client (streamClient.py):
+* Request Thread: Sends http requests to API at designated server
+* Decoder Thread: Decodes image to numpy array (for OpenCV)
+* Render Thread: Renders video to user on screen
+* Write Thread: Writes video to file on client
 
-## Installing Dependences:
-The default pip version of OpenCV does not contain the required video capabilities.
-This requires the install to be compiled with ffmpeg, which can be accomplished by installing from source or using precompiled anaconda channel (below):  
-```
-$ conda install -c conda-forge ffmpeg
-$ conda install -c conda-forge opencv
-```
+## Limitations
+The following limitations are known:
+1. Clients can either render or write video, but not both.
+    * Workaround: Create two client instances, one to render and one to write video to a file
+2. Data is not encrypted in transit:
+    * Workaround: None
+3. No API authentication:
+    * Workaround: None
