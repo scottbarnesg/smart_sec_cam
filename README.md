@@ -22,3 +22,7 @@ The following limitations are known:
     * Workaround: None
 3. No API authentication:
     * Workaround: None
+
+
+## Contributing
+Feel free to contact me if you are interested in contributing. A list of known issues is available to be worked.
