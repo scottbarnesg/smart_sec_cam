@@ -55,14 +55,23 @@ class Streamer:
 
 
 class Server:
-	def __init__(self, api_path='/api/test', auth_path='/api/auth'):
+	def __init__(self, api_path='/api/test', auth_path='/api/auth', require_auth=True):
 		self.api_path = api_path
 		self.auth_path = auth_path
+		self.require_auth = True
+		if require_auth == 'False':
+			self.require_auth = False
 		self.authorized = Authorized()
 
 # Start server
+import argparse
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--require_auth', help='Require authentication?', default='True')
+args = parser.parse_args()
+
 streamer = Streamer()
-server = Server()
+server = Server(require_auth=args.require_auth)
+
 app = Flask(__name__)
 @app.route(server.api_path, methods=['GET'])
 def serve_image():
@@ -73,9 +82,9 @@ def serve_image():
 		shutdown_server()
 	data = request.get_json()
 	authenticated = server.authorized.verify_token(data["username"], data["token"])
-	if authenticated:
+	if authenticated or not server.require_auth:
 		revoked = server.authorized.revoke(data["token"])
-		if not revoked:
+		if not revoked or not server.require_auth:
 			return Response(response=streamer.data, status=200, mimetype="application/json")
 	return Response(response="Authentication error", status=403, mimetype="application/json")
 

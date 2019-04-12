@@ -15,7 +15,7 @@ except:
 	from Queue import Queue
 
 class Client:
-	def __init__(self, username, password, addr='http://security-server:50000', api_path='/api/test', queueSize=256, delay=0.05, timeout=10, fps=10, vid_len=3600):
+	def __init__(self, username, password, addr='http://security-server:50000', api_path='/api/test', auth_required='True', queueSize=256, delay=0.05, timeout=10, fps=10, vid_len=3600):
 		# Request info
 		self.addr = addr
 		self.api_addr = addr+api_path
@@ -30,10 +30,21 @@ class Client:
 		# Video
 		self.fps = fps
 		self.vid_len = vid_len
-		# Get token for session
+		# Authentication
 		self.username = username
 		self.password = password
-		self.authenticate()
+		self.token = '0'
+		self.auth_required = True
+		if auth_required == 'False': # Convert to bool
+			self.auth_required = False
+		if self.auth_required:
+			print('Authenticating')
+			print(auth_required)
+			print(self.auth_required)
+			self.authenticate()
+		else:
+			print('Authentication not required')
+		time.sleep(1)
 
 	def authenticate(self):
 		response = requests.post(self.addr+'/api/auth', json={'username':self.username, 'password':self.password})
@@ -46,7 +57,7 @@ class Client:
 			t = time.time()
 			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout)
 			print('Got response in ' + str(time.time()-t))
-			if "Authentication error" in response.content:
+			if "Authentication error" in response.content and self.auth_required:
 				print('Attempting to re-authenticate')
 				self.authenticate()
 			elif not self.responseQ.full():
@@ -105,12 +116,13 @@ if __name__ == '__main__':
 	parser.add_argument('--server', help='Server IP Address/Hostname and Port', default='http://security-server:50000')
 	parser.add_argument('--username', help='Username for authentication', default='user')
 	parser.add_argument('--password', help='Password for authentication', default='password')
+	parser.add_argument('--auth_required', help='Attempt to authenticate with server?', default='True')
 	args = parser.parse_args()
 
 	if args.write == 'True' and args.render == 'True':
 		raise ValueError('You cannot write and render in a single client. Please use two client instances')
 
-	client = Client(args.username, args.password, addr=args.server, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
+	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
 
 	requestThread = Thread(target = client.requestor)
 	decodeThread = Thread(target = client.decode)

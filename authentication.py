@@ -23,10 +23,10 @@ def serverAuth(username, supplied_password, correct_hashed_password):
         (token, revoke_time) = createSession(username)
     return token, revoke_time, authenticated
 
-def createSession(username, timeout=7): # Timeout in days
+def createSession(username, timeout=24): # Timeout in hours
     token = uuid4()
     t = time.time()
-    revoke_time = t + timeout #*24*(60**2)
+    revoke_time = t + timeout*(60**2)
     return token.hex, revoke_time
 
 def revokeSession(token, revoke_time):
