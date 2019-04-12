@@ -15,9 +15,10 @@ except:
 	from Queue import Queue
 
 class Client:
-	def __init__(self, addr='http://security-server:50000', api_path='/api/test', queueSize=256, delay=0.05, timeout=5, fps=10, vid_len=3600):
+	def __init__(self, username, password, addr='http://security-server:50000', api_path='/api/test', queueSize=256, delay=0.05, timeout=10, fps=10, vid_len=3600):
 		# Request info
-		self.addr = addr+api_path
+		self.addr = addr
+		self.api_addr = addr+api_path
 		content_type = 'image/jpg'
 		self.header = {'content-type', content_type}
 		# Queue info
@@ -29,14 +30,26 @@ class Client:
 		# Video
 		self.fps = fps
 		self.vid_len = vid_len
+		# Get token for session
+		self.username = username
+		self.password = password
+		self.authenticate()
+
+	def authenticate(self):
+		response = requests.post(self.addr+'/api/auth', json={'username':self.username, 'password':self.password})
+		print(response.content)
+		self.token = response.content
 
 	def requestor(self):
 		while True:
 			print('Sending request')
 			t = time.time()
-			response = requests.get(self.addr, timeout=self.timeout)
+			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout)
 			print('Got response in ' + str(time.time()-t))
-			if not self.responseQ.full():
+			if "Authentication error" in response.content:
+				print('Attempting to re-authenticate')
+				self.authenticate()
+			elif not self.responseQ.full():
 				self.responseQ.put(response.content)
 			time.sleep(self.delay)
 
@@ -90,12 +103,14 @@ if __name__ == '__main__':
 	parser.add_argument('--fps', help='Frame rate', default=10)
 	parser.add_argument('--qSize', help='Queue size', default=256)
 	parser.add_argument('--server', help='Server IP Address/Hostname and Port', default='http://security-server:50000')
+	parser.add_argument('--username', help='Username for authentication', default='user')
+	parser.add_argument('--password', help='Password for authentication', default='password')
 	args = parser.parse_args()
 
 	if args.write == 'True' and args.render == 'True':
 		raise ValueError('You cannot write and render in a single client. Please use two client instances')
 
-	client = Client(addr=args.server, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
+	client = Client(args.username, args.password, addr=args.server, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
 
 	requestThread = Thread(target = client.requestor)
 	decodeThread = Thread(target = client.decode)
