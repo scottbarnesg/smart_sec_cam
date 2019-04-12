@@ -7,6 +7,12 @@ import json
 import numpy as np
 import io
 
+from authentication import serverAuth, revokeSession
+try:
+	from auth.authorized import Authorized
+except:
+	print 'Unable to import authorized users. Have you implemented this?'
+
 error = False
 
 class Streamer:
@@ -52,8 +58,10 @@ class Streamer:
 
 
 class Server:
-	def __init__(self, api_path='/api/test'):
+	def __init__(self, api_path='/api/test', auth_path='/api/auth'):
 		self.api_path = api_path
+		self.auth_path = auth_path
+		self.authorized = Authorized()
 
 # Start server
 streamer = Streamer()
@@ -66,7 +74,31 @@ def serve_image():
 		print('Exiting flask server thread')
 		shutdown_server = request.environ.get('werkzeug.server.shutdown')
 		shutdown_server()
-	return Response(response=streamer.data, status=200, mimetype="application/json")
+	authenticated = Authentication.verify(data["username"], data["token"])
+	if authenticated:
+		return Response(response=streamer.data, status=200, mimetype="application/json")
+	else:
+		return Response(response="403", status=403, mimetype="application/json")
+
+@app.route(server.auth_path, methods=['POST'])
+def authenticate():
+	print('Authentication request recieved')
+	data = request.get_json()
+	print(data["username"])
+	user_exists, correct_hashed_password = server.authorized.get_password(str(data["username"]))
+	print(correct_hashed_password)
+	if not user_exists:
+		return Response(response="Authentication error", status=403, mimetype="application/json")
+	token, revoke_time, authenticated = serverAuth(data["username"], data["password"], correct_hashed_password)
+	print(token)
+	print(revoke_time)
+	print(authenticated)
+	if authenticated:
+		server.authorized.new_login(data["username"], token, revoke_time)
+		return Response(response=token, status=200, mimetype="application/json")
+	else:
+		return Response(response="Authentication error", status=403, mimetype="application/json")
+
 
 def run_flask():
 	addr = '0.0.0.0'
