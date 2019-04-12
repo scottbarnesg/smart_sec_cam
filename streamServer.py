@@ -6,6 +6,7 @@ from flask import Flask, Response, request
 import json
 import numpy as np
 import io
+import os
 
 from authentication import serverAuth, revokeSession, Authorized
 
@@ -55,7 +56,7 @@ class Streamer:
 
 
 class Server:
-	def __init__(self, api_path='/api/test', auth_path='/api/auth', require_auth=True):
+	def __init__(self, api_path='/api/stream_video', auth_path='/api/auth', require_auth=True):
 		self.api_path = api_path
 		self.auth_path = auth_path
 		self.require_auth = True
@@ -110,7 +111,8 @@ def authenticate():
 def run_flask():
 	addr = '0.0.0.0'
 	port = 50000
-	app.run(host=addr, port=port, debug=False, threaded=True)
+	home_dir = os.path.expanduser("~")
+	app.run(host=addr, port=port, debug=False, threaded=True, ssl_context=(home_dir+'/smart_sec_cam/auth/cert.pem', home_dir+'/smart_sec_cam/auth/key.pem'))
 
 
 if __name__ == "__main__":

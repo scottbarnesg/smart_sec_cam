@@ -15,7 +15,7 @@ except:
 	from Queue import Queue
 
 class Client:
-	def __init__(self, username, password, addr='http://security-server:50000', api_path='/api/test', auth_required='True', queueSize=256, delay=0.05, timeout=10, fps=10, vid_len=3600):
+	def __init__(self, username, password, addr='https://security-server:50000', api_path='/api/stream_video', auth_required='True', queueSize=256, delay=0.05, timeout=10, fps=10, vid_len=3600):
 		# Request info
 		self.addr = addr
 		self.api_addr = addr+api_path
@@ -47,7 +47,7 @@ class Client:
 		time.sleep(1)
 
 	def authenticate(self):
-		response = requests.post(self.addr+'/api/auth', json={'username':self.username, 'password':self.password})
+		response = requests.post(self.addr+'/api/auth', json={'username':self.username, 'password':self.password}, verify=False)
 		print(response.content)
 		self.token = response.content
 
@@ -55,7 +55,7 @@ class Client:
 		while True:
 			print('Sending request')
 			t = time.time()
-			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout)
+			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout, verify=False)
 			print('Got response in ' + str(time.time()-t))
 			if "Authentication error" in response.content and self.auth_required:
 				print('Attempting to re-authenticate')
@@ -113,14 +113,19 @@ if __name__ == '__main__':
 	parser.add_argument('--addr', help='Server address', default='security-server')
 	parser.add_argument('--fps', help='Frame rate', default=10)
 	parser.add_argument('--qSize', help='Queue size', default=256)
-	parser.add_argument('--server', help='Server IP Address/Hostname and Port', default='http://security-server:50000')
+	parser.add_argument('--server', help='Server IP Address/Hostname and Port', default='https://security-server:50000')
 	parser.add_argument('--username', help='Username for authentication', default='user')
 	parser.add_argument('--password', help='Password for authentication', default='password')
 	parser.add_argument('--auth_required', help='Attempt to authenticate with server?', default='True')
+	parser.add_argument('--suppress_ssl_warning', help='Disables ssl warning for self-signed certificates', default='True')
 	args = parser.parse_args()
 
 	if args.write == 'True' and args.render == 'True':
 		raise ValueError('You cannot write and render in a single client. Please use two client instances')
+
+	if args.suppress_ssl_warning == 'True':
+		import urllib3
+		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
 
