@@ -7,11 +7,8 @@ import json
 import numpy as np
 import io
 
-from authentication import serverAuth, revokeSession
-try:
-	from auth.authorized import Authorized
-except:
-	print 'Unable to import authorized users. Have you implemented this?'
+from authentication import serverAuth, revokeSession, Authorized
+
 
 error = False
 
@@ -74,11 +71,13 @@ def serve_image():
 		print('Exiting flask server thread')
 		shutdown_server = request.environ.get('werkzeug.server.shutdown')
 		shutdown_server()
-	authenticated = Authentication.verify(data["username"], data["token"])
+	data = request.get_json()
+	authenticated = server.authorized.verify_token(data["username"], data["token"])
 	if authenticated:
-		return Response(response=streamer.data, status=200, mimetype="application/json")
-	else:
-		return Response(response="403", status=403, mimetype="application/json")
+		revoked = server.authorized.revoke(data["token"])
+		if not revoked:
+			return Response(response=streamer.data, status=200, mimetype="application/json")
+	return Response(response="Authentication error", status=403, mimetype="application/json")
 
 @app.route(server.auth_path, methods=['POST'])
 def authenticate():
@@ -86,7 +85,6 @@ def authenticate():
 	data = request.get_json()
 	print(data["username"])
 	user_exists, correct_hashed_password = server.authorized.get_password(str(data["username"]))
-	print(correct_hashed_password)
 	if not user_exists:
 		return Response(response="Authentication error", status=403, mimetype="application/json")
 	token, revoke_time, authenticated = serverAuth(data["username"], data["password"], correct_hashed_password)

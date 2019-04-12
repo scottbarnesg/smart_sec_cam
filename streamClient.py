@@ -17,7 +17,8 @@ except:
 class Client:
 	def __init__(self, username, password, addr='http://security-server:50000', api_path='/api/test', queueSize=256, delay=0.05, timeout=10, fps=10, vid_len=3600):
 		# Request info
-		self.addr = addr+api_path
+		self.addr = addr
+		self.api_addr = addr+api_path
 		content_type = 'image/jpg'
 		self.header = {'content-type', content_type}
 		# Queue info
@@ -30,18 +31,25 @@ class Client:
 		self.fps = fps
 		self.vid_len = vid_len
 		# Get token for session
-		response = requests.post(addr+'/api/auth', json={'username':username, 'password':password})
+		self.username = username
+		self.password = password
+		self.authenticate()
+
+	def authenticate(self):
+		response = requests.post(self.addr+'/api/auth', json={'username':self.username, 'password':self.password})
 		print(response.content)
 		self.token = response.content
-
 
 	def requestor(self):
 		while True:
 			print('Sending request')
 			t = time.time()
-			response = requests.get(self.addr, data={'token':self.token}, timeout=self.timeout)
+			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout)
 			print('Got response in ' + str(time.time()-t))
-			if not self.responseQ.full():
+			if "Authentication error" in response.content:
+				print('Attempting to re-authenticate')
+				self.authenticate()
+			elif not self.responseQ.full():
 				self.responseQ.put(response.content)
 			time.sleep(self.delay)
 
@@ -103,7 +111,7 @@ if __name__ == '__main__':
 		raise ValueError('You cannot write and render in a single client. Please use two client instances')
 
 	client = Client(args.username, args.password, addr=args.server, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length))
-	exit()
+
 	requestThread = Thread(target = client.requestor)
 	decodeThread = Thread(target = client.decode)
 	if args.render == 'True':
