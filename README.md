@@ -22,7 +22,7 @@ Stream Client (streamClient.py):
 ## Example Uses:
 ### The Basics:
 Start Server: python streamServer.py 
-Start Client: python streamClient.py --addr=<server-name-or-IP:listening-port> --username=<username> --password=<password>
+Start Client: python streamClient.py --addr=<<server-name-or-IP:listening-port>> --username=< username > --password=< password >
 
 ## Limitations
 The following limitations are known:
