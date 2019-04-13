@@ -14,10 +14,12 @@ from authentication import serverAuth, revokeSession, Authorized
 error = False
 
 class Streamer:
-	def __init__(self, capture_delay=0.05, camera_port=0, img_dims=[280,200]):
+	def __init__(self, capture_delay=0.05, camera_port=0, img_dims=[370,280]):
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(self.cam_port)) # Machine dependent
+		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, img_dims[1])
+		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, img_dims[0])
 		self.image = self.captureImage()
 		print('Image dimentions: ' + str(self.image.shape))
 
