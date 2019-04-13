@@ -3,6 +3,7 @@
 ## Overview
 This is a distributed OpenCV-based security camera appliation in which each endpoint captures video and sends it to connecting clients via an API. 
 
+Example Screenshot:
 ![Example Screenshot](https://github.com/scottbarnesg/smart_sec_cam/blob/master/images/sample1.png)
 
 The current release has the following capabilities:
