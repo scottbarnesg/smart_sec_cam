@@ -27,7 +27,8 @@ class Client:
 			timeout=10,
 			fps=10,
 			vid_len=3600,
-			motion_detect='True'
+			motion_detect='True',
+			write='False'
 		):
 		# Request info
 		self.addr = addr
@@ -57,8 +58,10 @@ class Client:
 			self.authenticate()
 		else:
 			print('Authentication not required')
-		if self.motion_detect:
+		if self.motion_detect and write != 'False':
 			print('Starting motion detection')
+		elif write == 'False':
+			print('Starting live video stream')
 		else:
 			print('Starting video recording')
 
@@ -169,7 +172,7 @@ if __name__ == '__main__':
 		import urllib3
 		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length), motion_detect=args.motion_detect)
+	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length), motion_detect=args.motion_detect, write=args.write)
 
 	requestThread = Thread(target = client.requestor)
 	decodeThread = Thread(target = client.decode)

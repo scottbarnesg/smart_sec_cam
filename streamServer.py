@@ -14,14 +14,15 @@ from authentication import serverAuth, revokeSession, Authorized
 error = False
 
 class Streamer:
-	def __init__(self, capture_delay=0.05, camera_port=0, img_dims=[370,280]):
+	def __init__(self, capture_delay=0.05, camera_port=0, compression_ratio=1.0):
 		self.cap_delay = capture_delay
 		self.cam_port=camera_port
 		self.cam = cv2.VideoCapture(int(self.cam_port)) # Machine dependent
-		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, img_dims[1])
-		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, img_dims[0])
 		self.image = self.captureImage()
-		print('Image dimentions: ' + str(self.image.shape))
+		print('Source video resolution: ' + str(self.image.shape))
+		self.compression(compression_ratio)
+		self.image = self.captureImage()
+		print('Compressed video resolution: ' + str(self.image.shape))
 
 	def captureImage(self, init=False):
 		global error
@@ -34,6 +35,13 @@ class Streamer:
 				print('Exiting capture thread')
 				exit()
 		return frame
+
+	def compression(self, compression_ratio):
+		width = compression_ratio * self.image.shape[0]
+		height = compression_ratio * self.image.shape[1]
+		self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+		self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
 
 	def run(self):
 		print('Starting image capture')
@@ -70,9 +78,10 @@ class Server:
 import argparse
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--require_auth', help='Require authentication?', default='True')
+parser.add_argument('--comp_ratio', help='Video compression ratio - float between 0 and 1', default='1.0')
 args = parser.parse_args()
 
-streamer = Streamer()
+streamer = Streamer(compression_ratio=float(args.comp_ratio))
 server = Server(require_auth=args.require_auth)
 
 app = Flask(__name__)
