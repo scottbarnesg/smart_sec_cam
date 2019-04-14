@@ -79,6 +79,7 @@ import argparse
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--require_auth', help='Require authentication?', default='True')
 parser.add_argument('--comp_ratio', help='Video compression ratio - float between 0 and 1', default='1.0')
+parser.add_argument('--port', help='Port for server to listen on', default='50000')
 args = parser.parse_args()
 
 streamer = Streamer(compression_ratio=float(args.comp_ratio))
@@ -123,7 +124,7 @@ def run_flask():
 	addr = '0.0.0.0'
 	port = 50000
 	home_dir = os.path.expanduser("~")
-	app.run(host=addr, port=port, debug=False, threaded=True, ssl_context=(home_dir+'/smart_sec_cam/auth/cert.pem', home_dir+'/smart_sec_cam/auth/key.pem'))
+	app.run(host=addr, port=args.port, debug=False, threaded=True, ssl_context=(home_dir+'/smart_sec_cam/auth/cert.pem', home_dir+'/smart_sec_cam/auth/key.pem'))
 
 
 if __name__ == "__main__":
