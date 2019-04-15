@@ -1,12 +1,11 @@
 #!/bin/bash
 
 echo 'Installing Dependencies - This will required admin permissions'
-sudo apt-get install python
-sudo apt-get install pip
-sudo apt-get install libsm6
-sudo apt-get install libgtk2.0-dev
-sudo apt-get install git
-sudo apt-get install ffmpeg
+sudo apt-get -y install python
+sudo apt-get -y install python-pip
+sudo apt-get -y install libsm6
+sudo apt-get -y install libgtk2.0-dev
+sudo apt-get -y install ffmpeg
 
 echo 'Installing python packages'
 python -m pip install opencv-python

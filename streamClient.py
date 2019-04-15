@@ -74,11 +74,18 @@ class Client:
 			self.token = response.content
 
 	def requestor(self):
+		time_counter = 0
+		request_time = []
 		while True:
-			# print('Sending request')
 			t = time.time()
 			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout, verify=False)
-			# print('Got response in ' + str(time.time()-t))
+			request_time.append(time.time()-t)
+			time_counter += 1
+			if time_counter >= 30:
+				avg_request_time = float(sum(request_time)) / float(len(request_time))
+				print('Average Frame Rate: ' + str(1.0/avg_request_time) + ' fps')
+				time_counter = 0
+				request_time = []
 			if "Authentication error" in response.content and self.auth_required:
 				print('Attempting to re-authenticate')
 				self.authenticate()

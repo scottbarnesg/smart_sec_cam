@@ -122,7 +122,6 @@ def authenticate():
 
 def run_flask():
 	addr = '0.0.0.0'
-	port = 50000
 	home_dir = os.path.expanduser("~")
 	app.run(host=addr, port=args.port, debug=False, threaded=True, ssl_context=(home_dir+'/smart_sec_cam/auth/cert.pem', home_dir+'/smart_sec_cam/auth/key.pem'))
 
