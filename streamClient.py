@@ -7,6 +7,7 @@ import json
 import io
 import os
 import numpy as np
+import sys
 
 # Make this compatible across versions
 try:
@@ -58,6 +59,21 @@ class Client:
 			self.authenticate()
 		else:
 			print('Authentication not required')
+		# Determine network speed
+		sys.stdout.write("Testing network speed and frame rate")
+		sys.stdout.flush()
+		request_time = []
+		for i in range(10):
+			sys.stdout.write(".")
+			sys.stdout.flush()
+			t = time.time()
+			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout, verify=False)
+			request_time.append(time.time()-t)
+		print " Done"
+		self.avg_request_time = float(sum(request_time)) / float(len(request_time))
+		self.avg_request_rate = 1.0/self.avg_request_time
+		print('Average single-thread frame rate: ' + str(self.avg_request_rate))
+		# Start core application
 		if self.motion_detect and write != 'False':
 			print('Starting motion detection')
 		elif write == 'False':
@@ -181,15 +197,26 @@ if __name__ == '__main__':
 
 	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length), motion_detect=args.motion_detect, write=args.write)
 
-	requestThread = Thread(target = client.requestor)
+	request_threads = 5 # Seems optimal, not sure why
+	requestThreads = []
+	# print('Starting ' + str(request_threads) ' video stream threads')
+	sys.stdout.write('Starting ' + str(request_threads) + ' video stream threads')
+	sys.stdout.flush()
+	for i in range(request_threads):
+		requestThreads.append(Thread(target = client.requestor))
+		sys.stdout.write('.')
+		sys.stdout.flush()
+	for i in range(request_threads):
+		requestThreads[i].start()
+		time.sleep(client.avg_request_time/float(request_threads))
+	print(' Done')
+	print('The expected frame rate is: ' + str(client.avg_request_rate*request_threads) + ' fps')
 	decodeThread = Thread(target = client.decode)
 	if args.render == 'True':
 		renderThread = Thread(target = client.render)
 	if args.write == 'True':
 	 	writeThread = Thread(target = client.write)
 
-	requestThread.start()
-	time.sleep(0.3)
 	decodeThread.start()
 	if args.render == 'True':
  		renderThread.start()
