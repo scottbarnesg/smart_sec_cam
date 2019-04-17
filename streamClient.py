@@ -63,7 +63,7 @@ class Client:
 		sys.stdout.write("Testing network speed and frame rate")
 		sys.stdout.flush()
 		request_time = []
-		for i in range(10):
+		for i in range(5):
 			sys.stdout.write(".")
 			sys.stdout.flush()
 			t = time.time()
@@ -90,18 +90,18 @@ class Client:
 			self.token = response.content
 
 	def requestor(self):
-		time_counter = 0
-		request_time = []
+		self.time_counter = 0
+		self.request_time = []
 		while True:
 			t = time.time()
 			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout, verify=False)
-			request_time.append(time.time()-t)
-			time_counter += 1
-			if time_counter >= 30:
-				avg_request_time = float(sum(request_time)) / float(len(request_time))
-				print('Average Frame Rate: ' + str(1.0/avg_request_time) + ' fps')
-				time_counter = 0
-				request_time = []
+			self.request_time.append(time.time()-t)
+			self.time_counter += 1
+			if self.time_counter >= 100:
+				avg_request_time = float(sum(self.request_time)) / float(len(self.request_time))
+				print('Average Frame Rate: ' + str(3*1.0/avg_request_time) + ' fps')
+				self.time_counter = 0
+				self.request_time = []
 			if "Authentication error" in response.content and self.auth_required:
 				print('Attempting to re-authenticate')
 				self.authenticate()
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
 	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length), motion_detect=args.motion_detect, write=args.write)
 
-	request_threads = 5 # Seems optimal, not sure why
+	request_threads = 3 # Seems optimal, not sure why
 	requestThreads = []
 	# print('Starting ' + str(request_threads) ' video stream threads')
 	sys.stdout.write('Starting ' + str(request_threads) + ' video stream threads')
@@ -208,9 +208,10 @@ if __name__ == '__main__':
 		sys.stdout.flush()
 	for i in range(request_threads):
 		requestThreads[i].start()
+		sys.stdout.write('.')
+		sys.stdout.flush()
 		time.sleep(client.avg_request_time/float(request_threads))
 	print(' Done')
-	print('The expected frame rate is: ' + str(client.avg_request_rate*request_threads) + ' fps')
 	decodeThread = Thread(target = client.decode)
 	if args.render == 'True':
 		renderThread = Thread(target = client.render)
