@@ -11,7 +11,6 @@ echo 'Installing python packages'
 python -m pip install opencv-python
 python -m pip install flask
 python -m pip install requests
-python -m pip install python-opencv
 
 echo 'Is this a server instance (y/n)?'
 read is_server
