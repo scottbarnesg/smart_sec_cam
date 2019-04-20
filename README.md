@@ -24,6 +24,14 @@ Stream Client (streamClient.py):
 * Render Thread: Renders video to user on screen
 * Write Thread: Writes video to file on client. This is integrated with motion detection.
 
+## Installation:
+The install script (install.sh) will install all required dependencies automatically. Run the following commands:
+```
+cd smart_sec_cam/install
+bash install.sh
+```
+This must be performed as an admin user (that can sudo). You will need to enter your password.
+
 ## Example Uses:
 ### The Basics:
 Start Server: python streamServer.py 
