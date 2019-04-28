@@ -5,6 +5,7 @@ import flask
 from flask import Flask, Response, request
 import json
 import numpy as np
+import datetime
 import io
 import os
 
@@ -74,6 +75,24 @@ class Server:
 			self.require_auth = False
 		self.authorized = Authorized()
 
+class Logger:
+	def __init__(self):
+		date = datetime.datetime.now()
+		path = "logs/"
+		if not os.path.exists(path):
+			os.makedirs(path)
+		self.filepath = path + str(date.month) + '-' + str(date.day) + '-' + str(date.year)
+		logfile = open(self.filepath,"w+")
+		logfile.close()
+		print('Logs will be saved to: ' + self.filepath)
+
+	def log(self, message):
+		logfile = open(self.filepath,"a")
+		logfile.write(message + "\n")
+		logfile.close()
+
+
+
 # Start server
 import argparse
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -84,6 +103,7 @@ args = parser.parse_args()
 
 streamer = Streamer(compression_ratio=float(args.comp_ratio))
 server = Server(require_auth=args.require_auth)
+logger = Logger()
 
 app = Flask(__name__)
 @app.route(server.api_path, methods=['GET'])
@@ -106,17 +126,21 @@ def authenticate():
 	print('Authentication request recieved')
 	data = request.get_json()
 	print(data["username"])
+	logger.log("Authentication Request from IP " + str(request.remote_addr) + " for user " + str(data["username"]))
 	user_exists, correct_hashed_password = server.authorized.get_password(str(data["username"]))
 	if not user_exists:
 		return Response(response="Authentication error", status=403, mimetype="application/json")
+		logger.log("Failed authentication Request from IP " + str(request.remote_addr) + " for user " + str(data["username"]) + " - Non-existent user")
 	token, revoke_time, authenticated = serverAuth(data["username"], data["password"], correct_hashed_password)
 	print(token)
 	print(revoke_time)
 	print(authenticated)
 	if authenticated:
 		server.authorized.new_login(data["username"], token, revoke_time)
+		logger.log("Successful authentication Request from IP " + str(request.remote_addr) + " for user " + str(data["username"]))
 		return Response(response=token, status=200, mimetype="application/json")
 	else:
+		logger.log("Failed authentication Request from IP " + str(request.remote_addr) + " for user " + str(data["username"]) + " - Incorrect password")
 		return Response(response="Authentication error", status=403, mimetype="application/json")
 
 
