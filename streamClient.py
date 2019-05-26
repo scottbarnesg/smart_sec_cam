@@ -25,7 +25,7 @@ class Client:
 			auth_required='True',
 			queueSize=256,
 			delay=0.05,
-			timeout=10,
+			timeout=2,
 			fps=10,
 			vid_len=3600,
 			motion_detect='True',
