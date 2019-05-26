@@ -94,7 +94,10 @@ class Client:
 		self.request_time = []
 		while True:
 			t = time.time()
-			response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout, verify=False)
+			try:
+				response = requests.get(self.api_addr, json={'username':self.username, 'token':self.token}, timeout=self.timeout, verify=False)
+			except:
+				print ("Failed to recieve response from server - retrying")
 			self.request_time.append(time.time()-t)
 			self.time_counter += 1
 			if self.time_counter >= 100:
