@@ -7,8 +7,18 @@ sudo apt-get -y install libsm6
 sudo apt-get -y install libgtk2.0-dev
 sudo apt-get -y install ffmpeg
 
+echo -n 'Is this a raspberry pi (y/n)? '
+read is_pi
+echo "Installing OpenCV"
+if [ "${is_pi,,}" == "y" ]; then
+  git clone https://github.com/scottbarnesg/Automated-OpenCV-Install.git
+  cd Automated-OpenCV-Install/
+  bash install-py2.sh
+else
+  python -m pip install opencv-python
+fi
+
 echo 'Installing python packages'
-python -m pip install opencv-python
 python -m pip install flask
 python -m pip install requests
 
