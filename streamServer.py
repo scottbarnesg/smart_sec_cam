@@ -13,7 +13,7 @@ from authentication import serverAuth, revokeSession, Authorized
 
 
 error = False
-active_connection = True
+active_connection = False
 active_web_connection = False
 connection_time = 0
 web_connection_time = 0
@@ -52,7 +52,7 @@ class Streamer:
         print('Starting image capture')
         global active_connection
         while True:
-            if active_connection:
+            if active_connection or active_web_connection:
                  self.image = self.captureImage()
                  time.sleep(self.cap_delay) # Prevents capture from eating cpu time
             else:
@@ -74,8 +74,11 @@ class Streamer:
         global error
         global active_web_connection
         while not error:
-            cv2.imwrite('web-interface/image.jpeg', streamer.image)
-            time.sleep(0.25)
+            if active_web_connection:
+                cv2.imwrite('web-interface/image.jpeg', streamer.image)
+                time.sleep(0.25)
+            else:
+                time.sleep(0.5)
 
     def reset_vidcap(self):
         self.cam.release()
@@ -118,11 +121,14 @@ def connectionManager():
     global active_web_connection
     connection_time = time.time()
     timeout = 10.0
-    # while not error:
-    #     if time.time() - connection_time >= timeout and active_connection == True:
-            # active_connection = False
-            # print("No recent connection requests - halting video capture")
-    #     time.sleep(1)
+    while not error:
+        if time.time() - connection_time >= timeout and active_connection == True:
+            active_connection = False
+            print("No recent client connection requests - halting video capture")
+        if time.time() - web_connection_time >= timeout and active_web_connection == True:
+            active_web_connection = False
+            print("No recent web connection requests - halting video capture")
+        time.sleep(1)
 
 
 
@@ -168,9 +174,12 @@ def server_web_interface():
 
 @app.route('/image.jpeg', methods=['GET'])
 def server_web_image():
+    global active_web_connection, web_connection_time
+    active_web_connection = True
+    web_connection_time = time.time()
     path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'web-interface')
     while not os.path.lexists('web-interface/image.jpeg'):
-        print("Waiting for image file")
+        pass
     return send_from_directory(path, 'image.jpeg')
 
 @app.route(server.auth_path, methods=['POST'])
