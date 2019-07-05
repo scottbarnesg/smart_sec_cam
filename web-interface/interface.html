@@ -2,16 +2,17 @@
 <head>
 <script type ="text/Javascript">
 
-var timeoutPeriod = 100;
+var timeoutPeriod = 250;
 var imageURI = 'image.jpeg';
-var x=0, y=0;
 var img = new Image();
 img.onload = function() {
-    var canvas = document.getElementById("x");
+    var canvas = document.getElementById("canvas");
     var context = canvas.getContext("2d");
+    canvas.setAttribute("width", img.width)
+    canvas.setAttribute("height", img.height)
 
-    context.drawImage(img, x, y);
-    x+=20; y+=20;
+    context.drawImage(img, 0, 0);
+
     setTimeout(timedRefresh,timeoutPeriod);
 };
 

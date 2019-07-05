@@ -2,7 +2,7 @@ import cv2
 import time
 from threading import Thread
 import flask
-from flask import Flask, Response, request
+from flask import Flask, Response, request, send_from_directory
 import json
 import numpy as np
 import datetime
@@ -13,7 +13,7 @@ from authentication import serverAuth, revokeSession, Authorized
 
 
 error = False
-active_connection = False
+active_connection = True
 active_web_connection = False
 connection_time = 0
 web_connection_time = 0
@@ -74,10 +74,8 @@ class Streamer:
         global error
         global active_web_connection
         while not error:
-            if active_web_connection:
-                cv2.imwrite('web-interface/image.jpeg', streamer.image)
-            else:
-                time.sleep(0.5)
+            cv2.imwrite('web-interface/image.jpeg', streamer.image)
+            time.sleep(0.25)
 
     def reset_vidcap(self):
         self.cam.release()
@@ -88,9 +86,10 @@ class Streamer:
 
 
 class Server:
-    def __init__(self, api_path='/api/stream_video', auth_path='/api/auth', web_path='/', require_auth=True):
+    def __init__(self, api_path='/api/stream_video', auth_path='/api/auth', web_path='/web-interface', require_auth=True):
         self.api_path = api_path
         self.auth_path = auth_path
+        self.web_path = web_path
         self.require_auth = True
         if require_auth == 'False':
             self.require_auth = False
@@ -119,11 +118,11 @@ def connectionManager():
     global active_web_connection
     connection_time = time.time()
     timeout = 10.0
-    while not error:
-        if time.time() - connection_time >= timeout and active_connection == True:
-            active_connection = False
-            print("No recent connection requests - halting video capture")
-        time.sleep(1)
+    # while not error:
+    #     if time.time() - connection_time >= timeout and active_connection == True:
+            # active_connection = False
+            # print("No recent connection requests - halting video capture")
+    #     time.sleep(1)
 
 
 
@@ -159,13 +158,20 @@ def serve_image():
             return Response(response=streamer.data, status=200, mimetype="application/json")
     return Response(response="Authentication error", status=403, mimetype="application/json")
 
-@app.route(server.web_path, methods=['GET'])
+@app.route('/', methods=['GET'])
 def server_web_interface():
     global active_web_connection, web_connection_time
     active_web_connection = True
     web_connection_time = time.time()
-    return Response(response='web-interface/interface.html', status=200, mimetype="text/html")
+    path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'web-interface')
+    return send_from_directory(path, 'interface.html')
 
+@app.route('/image.jpeg', methods=['GET'])
+def server_web_image():
+    path = os.path.join(os.path.dirname(os.path.realpath('__file__')), 'web-interface')
+    while not os.path.lexists('web-interface/image.jpeg'):
+        print("Waiting for image file")
+    return send_from_directory(path, 'image.jpeg')
 
 @app.route(server.auth_path, methods=['POST'])
 def authenticate():
@@ -203,9 +209,11 @@ if __name__ == "__main__":
     streamThread = Thread(target = streamer.run)
     serverThread = Thread(target = run_flask)
     encoderThread = Thread(target = streamer.encode)
+    writeThread  = Thread(target = streamer.write)
     managerThread = Thread(target = connectionManager)
 
     streamThread.start()
     serverThread.start()
     encoderThread.start()
+    writeThread.start()
     managerThread.start()
