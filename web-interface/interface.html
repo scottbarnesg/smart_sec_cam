@@ -1,0 +1,29 @@
+<html>
+<head>
+<script type ="text/Javascript">
+
+var timeoutPeriod = 100;
+var imageURI = 'image.jpeg';
+var x=0, y=0;
+var img = new Image();
+img.onload = function() {
+    var canvas = document.getElementById("x");
+    var context = canvas.getContext("2d");
+
+    context.drawImage(img, x, y);
+    x+=20; y+=20;
+    setTimeout(timedRefresh,timeoutPeriod);
+};
+
+function timedRefresh() {
+    img.src = imageURI + '?d=' + Date.now();
+}
+
+</script>
+<title>Security Camera Live</title>
+</head>
+
+<body onload="Javascript:timedRefresh();">
+<canvas id="canvas"/>
+</body>
+</html>

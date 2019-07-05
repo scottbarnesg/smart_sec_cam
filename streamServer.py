@@ -14,7 +14,9 @@ from authentication import serverAuth, revokeSession, Authorized
 
 error = False
 active_connection = False
+active_web_connection = False
 connection_time = 0
+web_connection_time = 0
 
 class Streamer:
     def __init__(self, capture_delay=0.05, camera_port=0, compression_ratio=1.0):
@@ -68,6 +70,15 @@ class Streamer:
                 time.sleep(0.5)
         print('Exiting encoder thread')
 
+    def write(self):
+        global error
+        global active_web_connection
+        while not error:
+            if active_web_connection:
+                cv2.imwrite('web-interface/image.jpeg', streamer.image)
+            else:
+                time.sleep(0.5)
+
     def reset_vidcap(self):
         self.cam.release()
         self.cam = cv2.VideoCapture(int(self.cam_port)) # Machine dependent
@@ -77,7 +88,7 @@ class Streamer:
 
 
 class Server:
-    def __init__(self, api_path='/api/stream_video', auth_path='/api/auth', require_auth=True):
+    def __init__(self, api_path='/api/stream_video', auth_path='/api/auth', web_path='/', require_auth=True):
         self.api_path = api_path
         self.auth_path = auth_path
         self.require_auth = True
@@ -103,7 +114,9 @@ class Logger:
 
 def connectionManager():
     global connection_time
+    global web_connection_time
     global active_connection
+    global active_web_connection
     connection_time = time.time()
     timeout = 10.0
     while not error:
@@ -145,6 +158,14 @@ def serve_image():
         if not revoked or not server.require_auth:
             return Response(response=streamer.data, status=200, mimetype="application/json")
     return Response(response="Authentication error", status=403, mimetype="application/json")
+
+@app.route(server.web_path, methods=['GET'])
+def server_web_interface():
+    global active_web_connection, web_connection_time
+    active_web_connection = True
+    web_connection_time = time.time()
+    return Response(response='web-interface/interface.html', status=200, mimetype="text/html")
+
 
 @app.route(server.auth_path, methods=['POST'])
 def authenticate():
