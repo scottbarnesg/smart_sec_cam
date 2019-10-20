@@ -127,12 +127,10 @@ class Client:
 			if self.decodeQ.qsize() > 0:
 				t = time.time()
 				frame = self.decodeQ.get()
-				if frame.any():
+				if frame is not None:
 					cv2.imshow("image", cv2.resize(frame, (640,480)))
 					cv2.waitKey(1)
 					# print('Displayed new frame in ' + str(time.time()-t))
-				else:
-					print('Failed to print frame')
 
 	def write(self):
 		self.fourcc = cv2.VideoWriter_fourcc(*'MJPG')
