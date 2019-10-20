@@ -190,6 +190,7 @@ def authenticate():
     connection_time = time.time()
     data = request.get_json()
     print(data["username"])
+    print(data["password"])
     logger.log("Authentication Request from IP " + str(request.remote_addr) + " for user " + str(data["username"]))
     user_exists, correct_hashed_password = server.authorized.get_password(str(data["username"]))
     if not user_exists:
@@ -205,7 +206,7 @@ def authenticate():
         return Response(response=token, status=200, mimetype="application/json")
     else:
         logger.log("Failed authentication Request from IP " + str(request.remote_addr) + " for user " + str(data["username"]) + " - Incorrect password")
-        return Response(response="Authentication error", status=403, mimetype="application/json")
+	return Response(response="Authentication error", status=403, mimetype="application/json")
 
 
 def run_flask():

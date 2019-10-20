@@ -126,9 +126,13 @@ class Client:
 		while True:
 			if self.decodeQ.qsize() > 0:
 				t = time.time()
-				cv2.imshow("image", cv2.resize(self.decodeQ.get(), (640,480)))
-				cv2.waitKey(1)
-				# print('Displayed new frame in ' + str(time.time()-t))
+				frame = self.decodeQ.get()
+				if frame.any():
+					cv2.imshow("image", cv2.resize(frame, (640,480)))
+					cv2.waitKey(1)
+					# print('Displayed new frame in ' + str(time.time()-t))
+				else:
+					print('Failed to print frame')
 
 	def write(self):
 		self.fourcc = cv2.VideoWriter_fourcc(*'MJPG')
@@ -181,7 +185,7 @@ if __name__ == '__main__':
 	parser.add_argument('--video_length', help='Length of Each Video (s)', default='3600') # Not yet implemented
 	parser.add_argument('--render', help='Render the video stream', default='True')
 	parser.add_argument('--write', help='Save video locally', default='False')
-	parser.add_argument('--fps', help='Frame rate', default=10)
+	parser.add_argument('--fps', help='Frame rate', default=20)
 	parser.add_argument('--qSize', help='Queue size', default=256)
 	parser.add_argument('--server', help='Server IP Address/Hostname and Port', default='https://security-server:50000')
 	parser.add_argument('--username', help='Username for authentication', default='user')
@@ -200,7 +204,8 @@ if __name__ == '__main__':
 
 	client = Client(args.username, args.password, addr=args.server, auth_required=args.auth_required, queueSize=int(args.qSize), delay=float(args.capture_delay), fps=float(args.fps), vid_len=int(args.video_length), motion_detect=args.motion_detect, write=args.write)
 
-	request_threads = 3 # Seems optimal, not sure why
+	# request_threads = 3 # Seems optimal, not sure why
+	request_threads = 1
 	requestThreads = []
 	# print('Starting ' + str(request_threads) ' video stream threads')
 	sys.stdout.write('Starting ' + str(request_threads) + ' video stream threads')
